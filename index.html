@@ -406,7 +406,237 @@ let fxRates = { USD_CNY: 6.81, HKD_CNY: 0.8693 };
 
 // ==================== 初始化资产数据 ====================
 // 从腾讯文档「资产分布」表迁移的历史数据
-const historicalRecords = [];
+const historicalRecords = [
+  {
+    "date": "2024-02-19",
+    "totalAUM": 99.5,
+    "personalNAV": 86.3,
+    "managedFunds": 13.2,
+    "categories": {
+      "中概股票": 10,
+      "美股基金": 0,
+      "A股基金": 7.8,
+      "web3": 0,
+      "外币理财": 19.7,
+      "RMB理财": 30.5,
+      "存款": 0.6,
+      "债基": 1.4,
+      "公积金": 21.1,
+      "中概基金": 1.5,
+      "美元保单": 0,
+      "RMB保单": 0,
+      "代管资金(爸妈)": 13.2
+    }
+  },
+  {
+    "date": "2024-05-24",
+    "totalAUM": 123,
+    "personalNAV": 97.8,
+    "managedFunds": 25.2,
+    "categories": {
+      "中概股票": 15.4,
+      "美股基金": 0.4,
+      "A股基金": 13.2,
+      "web3": 0,
+      "外币理财": 44.5,
+      "RMB理财": 4.3,
+      "存款": 0.6,
+      "债基": 4.5,
+      "公积金": 24.3,
+      "中概基金": 3.4,
+      "美元保单": 0,
+      "RMB保单": 0,
+      "代管资金(爸妈)": 25.2
+    }
+  },
+  {
+    "date": "2024-08-09",
+    "totalAUM": 166.5,
+    "personalNAV": 105.4,
+    "managedFunds": 61.1,
+    "categories": {
+      "中概股票": 20.7,
+      "美股基金": 1.3,
+      "A股基金": 12.7,
+      "web3": 7,
+      "外币理财": 6.5,
+      "RMB理财": 4.5,
+      "存款": 0.6,
+      "债基": 4.8,
+      "公积金": 26.1,
+      "中概基金": 3.8,
+      "美元保单": 73.9,
+      "RMB保单": 0,
+      "代管资金(爸妈)": 61.1
+    }
+  },
+  {
+    "date": "2025-01-04",
+    "totalAUM": 195.8,
+    "personalNAV": 134.7,
+    "managedFunds": 61.1,
+    "categories": {
+      "中概股票": 22.9,
+      "美股基金": 5.5,
+      "A股基金": 10.9,
+      "web3": 10.1,
+      "外币理财": 13.7,
+      "RMB理财": 13,
+      "存款": 0.6,
+      "债基": 6.1,
+      "公积金": 29.8,
+      "中概基金": 2.3,
+      "美元保单": 75.4,
+      "RMB保单": 0.2,
+      "代管资金(爸妈)": 61.1
+    }
+  },
+  {
+    "date": "2025-04-05",
+    "totalAUM": 214.9,
+    "personalNAV": 153.8,
+    "managedFunds": 61.1,
+    "categories": {
+      "中概股票": 30.6,
+      "美股基金": 5.7,
+      "A股基金": 11.3,
+      "web3": 24.1,
+      "外币理财": 56.7,
+      "RMB理财": 2.6,
+      "存款": 0,
+      "债基": 6.8,
+      "公积金": 2.2,
+      "中概基金": 0,
+      "美元保单": 75.4,
+      "RMB保单": 0.2,
+      "代管资金(爸妈)": 61.1
+    }
+  },
+  {
+    "date": "2025-07-05",
+    "totalAUM": 229.8,
+    "personalNAV": 162.7,
+    "managedFunds": 67.1,
+    "categories": {
+      "中概股票": 59.3,
+      "美股基金": 7.2,
+      "A股基金": 6.1,
+      "web3": 30.2,
+      "外币理财": 31.5,
+      "RMB理财": 5.2,
+      "存款": 0,
+      "债基": 8.2,
+      "公积金": 4.6,
+      "中概基金": 0,
+      "美元保单": 80.2,
+      "RMB保单": 0.2,
+      "代管资金(爸妈)": 67.1
+    }
+  },
+  {
+    "date": "2025-10-15",
+    "totalAUM": 254.7,
+    "personalNAV": 185.6,
+    "managedFunds": 69.1,
+    "categories": {
+      "中概股票": 79.9,
+      "美股基金": 8.5,
+      "A股基金": 5.1,
+      "web3": 31.4,
+      "外币理财": 53.3,
+      "RMB理财": 3.8,
+      "存款": 0,
+      "债基": 7.5,
+      "公积金": 7.3,
+      "中概基金": 0,
+      "美元保单": 82.4,
+      "RMB保单": 0.5,
+      "代管资金(爸妈)": 69.1
+    }
+  },
+  {
+    "date": "2026-01-01",
+    "totalAUM": 268.9,
+    "personalNAV": 175.8,
+    "managedFunds": 93.1,
+    "categories": {
+      "中概股票": 97.6,
+      "美股基金": 8.8,
+      "A股基金": 5.3,
+      "web3": 24.2,
+      "外币理财": 43.4,
+      "RMB理财": 4.5,
+      "存款": 0,
+      "债基": 4.7,
+      "公积金": 3.3,
+      "中概基金": 0,
+      "美元保单": 80.9,
+      "RMB保单": 0.5,
+      "代管资金(爸妈)": 93.1
+    }
+  },
+  {
+    "date": "2026-03-08",
+    "totalAUM": 268.6,
+    "personalNAV": 175.5,
+    "managedFunds": 93.1,
+    "categories": {
+      "中概股票": 82,
+      "美股基金": 8.5,
+      "A股基金": 5.4,
+      "web3": 32.4,
+      "外币理财": 30.1,
+      "RMB理财": 5.7,
+      "存款": 0,
+      "债基": 4.7,
+      "公积金": 5.1,
+      "中概基金": 0,
+      "美元保单": 80.5,
+      "RMB保单": 0.5,
+      "代管资金(爸妈)": 93.1
+    }
+  },
+  {
+    "date": "2026-05-07",
+    "totalAUM": 277.7,
+    "personalNAV": 184.6,
+    "managedFunds": 93.1,
+    "categories": {
+      "中概股票": 99.6,
+      "美股基金": 9,
+      "A股基金": 6.1,
+      "web3": 35.4,
+      "外币理财": 24.4,
+      "RMB理财": 12.1,
+      "存款": 0,
+      "债基": 4.7,
+      "公积金": 6.9,
+      "中概基金": 0,
+      "美元保单": 78.9,
+      "RMB保单": 0.5,
+      "代管资金(爸妈)": 93.1
+    }
+  },
+  {
+    "date": "2026-06-23",
+    "totalAUM": 250.3,
+    "personalNAV": 157.20000000000002,
+    "managedFunds": 93.1,
+    "categories": {
+      "中概股票": 95.2,
+      "外币理财": 13.600000000000001,
+      "美股基金": 9.200000000000001,
+      "A股基金": 1.8000000000000003,
+      "web3": 31,
+      "RMB理财": 8.5,
+      "债基": 4.7,
+      "公积金": 6.9,
+      "美元保单": 78.89999999999999,
+      "RMB保单": 0.5,
+      "代管资金(爸妈)": 93.1
+    }
+  }
+];
 
 // 最新数据
 let currentData = { ...historicalRecords[historicalRecords.length - 1] };
@@ -415,7 +645,318 @@ currentData.date = new Date().toISOString().slice(0, 10);
 let lastSnapshotDate = historicalRecords[historicalRecords.length - 1].date;
 
 // ==================== 详细账户数据（最新快照） ====================
-const accountDetails = [];
+const accountDetails = [
+  {
+    "category": "中概股票",
+    "tag": "股票",
+    "tagClass": "tag-stock",
+    "platform": "长桥·PDD",
+    "shares": "1000股",
+    "value": 54.2,
+    "source": "实时"
+  },
+  {
+    "category": "中概股票",
+    "tag": "股票",
+    "tagClass": "tag-stock",
+    "platform": "长桥·LKNCY",
+    "shares": "200股",
+    "value": 4.2,
+    "source": "实时"
+  },
+  {
+    "category": "中概股票",
+    "tag": "股票",
+    "tagClass": "tag-stock",
+    "platform": "长桥·0700",
+    "shares": "100股",
+    "value": 3.8,
+    "source": "实时"
+  },
+  {
+    "category": "中概股票",
+    "tag": "股票",
+    "tagClass": "tag-stock",
+    "platform": "长桥·YSG",
+    "shares": "500股",
+    "value": 1.1,
+    "source": "实时"
+  },
+  {
+    "category": "中概股票",
+    "tag": "股票",
+    "tagClass": "tag-stock",
+    "platform": "长桥·MNSO",
+    "shares": "200股",
+    "value": 0.4,
+    "source": "实时"
+  },
+  {
+    "category": "外币理财",
+    "tag": "理财",
+    "tagClass": "tag-other",
+    "platform": "长桥·平安货基",
+    "shares": "9664份",
+    "value": 6.5,
+    "source": "实时",
+    "sub": "美元"
+  },
+  {
+    "category": "外币理财",
+    "tag": "理财",
+    "tagClass": "tag-other",
+    "platform": "长桥·USD现金",
+    "shares": "$942",
+    "value": 0.6,
+    "source": "实时",
+    "sub": "美元"
+  },
+  {
+    "category": "外币理财",
+    "tag": "理财",
+    "tagClass": "tag-other",
+    "platform": "长桥·HKD现金",
+    "shares": "$503",
+    "value": 0,
+    "source": "实时",
+    "sub": "港币"
+  },
+  {
+    "category": "中概股票",
+    "tag": "股票",
+    "tagClass": "tag-stock",
+    "platform": "盈透·0700",
+    "shares": "100股",
+    "value": 3.7,
+    "source": "实时"
+  },
+  {
+    "category": "中概股票",
+    "tag": "股票",
+    "tagClass": "tag-stock",
+    "platform": "盈透·PDD",
+    "shares": "400股",
+    "value": 21.7,
+    "source": "实时"
+  },
+  {
+    "category": "中概股票",
+    "tag": "股票",
+    "tagClass": "tag-stock",
+    "platform": "中银国际·0700",
+    "shares": "157股",
+    "value": 6,
+    "source": "实时"
+  },
+  {
+    "category": "中概股票",
+    "tag": "股票",
+    "tagClass": "tag-stock",
+    "platform": "富途·美团",
+    "shares": "15股",
+    "value": 0.1,
+    "source": "实时"
+  },
+  {
+    "category": "美股基金",
+    "tag": "基金",
+    "tagClass": "tag-fund",
+    "platform": "摩根标普500",
+    "shares": "19855份",
+    "value": 3.3,
+    "source": "实时"
+  },
+  {
+    "category": "美股基金",
+    "tag": "基金",
+    "tagClass": "tag-fund",
+    "platform": "天弘标普500",
+    "shares": "13159份",
+    "value": 2.9,
+    "source": "实时"
+  },
+  {
+    "category": "美股基金",
+    "tag": "基金",
+    "tagClass": "tag-fund",
+    "platform": "华夏标普500",
+    "shares": "8342份",
+    "value": 1.4,
+    "source": "实时"
+  },
+  {
+    "category": "美股基金",
+    "tag": "基金",
+    "tagClass": "tag-fund",
+    "platform": "博时标普500",
+    "shares": "2450份",
+    "value": 1.3,
+    "source": "实时"
+  },
+  {
+    "category": "美股基金",
+    "tag": "基金",
+    "tagClass": "tag-fund",
+    "platform": "景顺纳斯达克",
+    "shares": "1035份",
+    "value": 0.3,
+    "source": "实时"
+  },
+  {
+    "category": "A股基金",
+    "tag": "基金",
+    "tagClass": "tag-fund",
+    "platform": "大成高鑫股票",
+    "shares": "2716份",
+    "value": 1.3,
+    "source": "实时"
+  },
+  {
+    "category": "A股基金",
+    "tag": "基金",
+    "tagClass": "tag-fund",
+    "platform": "国金量化多因子",
+    "shares": "1036份",
+    "value": 0.4,
+    "source": "实时"
+  },
+  {
+    "category": "A股基金",
+    "tag": "基金",
+    "tagClass": "tag-fund",
+    "platform": "中证红利ETF联接",
+    "shares": "686份",
+    "value": 0.1,
+    "source": "实时"
+  },
+  {
+    "category": "web3",
+    "tag": "加密货币",
+    "tagClass": "tag-crypto",
+    "platform": "币安·BTC",
+    "shares": "0.609",
+    "value": 26.6,
+    "source": "实时"
+  },
+  {
+    "category": "web3",
+    "tag": "加密货币",
+    "tagClass": "tag-crypto",
+    "platform": "币安·USDT",
+    "shares": "6500",
+    "value": 4.4,
+    "source": "实时"
+  },
+  {
+    "category": "外币理财",
+    "tag": "理财",
+    "tagClass": "tag-other",
+    "platform": "盈透·HKD",
+    "shares": "$6.0万",
+    "value": 5.2,
+    "source": "实时",
+    "sub": "港币"
+  },
+  {
+    "category": "外币理财",
+    "tag": "理财",
+    "tagClass": "tag-other",
+    "platform": "盈透·USD",
+    "value": 1.3,
+    "source": "实时",
+    "sub": "美元"
+  },
+  {
+    "category": "RMB理财",
+    "tag": "理财",
+    "tagClass": "tag-other",
+    "platform": "招商银行",
+    "value": 4.8,
+    "source": "实时"
+  },
+  {
+    "category": "RMB理财",
+    "tag": "理财",
+    "tagClass": "tag-other",
+    "platform": "微众银行",
+    "value": 2.7,
+    "source": "实时"
+  },
+  {
+    "category": "RMB理财",
+    "tag": "理财",
+    "tagClass": "tag-other",
+    "platform": "招商证券",
+    "value": 1,
+    "source": "实时"
+  },
+  {
+    "category": "债基",
+    "tag": "基金",
+    "tagClass": "tag-fund",
+    "platform": "易方达信用债",
+    "shares": "22009份",
+    "value": 2.5,
+    "source": "实时"
+  },
+  {
+    "category": "债基",
+    "tag": "基金",
+    "tagClass": "tag-fund",
+    "platform": "鹏华丰禄债券",
+    "shares": "21163份",
+    "value": 2.2,
+    "source": "实时"
+  },
+  {
+    "category": "公积金",
+    "tag": "公积金",
+    "tagClass": "tag-cash",
+    "platform": "深圳市",
+    "value": 6.9,
+    "source": "手动"
+  },
+  {
+    "category": "美元保单",
+    "tag": "保险",
+    "tagClass": "tag-insurance",
+    "platform": "BLUE",
+    "value": 68,
+    "source": "手动"
+  },
+  {
+    "category": "美元保单",
+    "tag": "保险",
+    "tagClass": "tag-insurance",
+    "platform": "永明",
+    "value": 4.1,
+    "source": "手动"
+  },
+  {
+    "category": "美元保单",
+    "tag": "保险",
+    "tagClass": "tag-insurance",
+    "platform": "Chubb",
+    "value": 6.8,
+    "source": "手动"
+  },
+  {
+    "category": "RMB保单",
+    "tag": "保险",
+    "tagClass": "tag-insurance",
+    "platform": "中荷",
+    "value": 0.5,
+    "source": "手动"
+  },
+  {
+    "category": "代管资金(爸妈)",
+    "tag": "代管",
+    "tagClass": "tag-other",
+    "platform": "父母委托",
+    "value": 93.1,
+    "source": "手动"
+  }
+];
 
 // ==================== 大类汇总定义 ====================
 const categoryGroups = {
