@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>资产仪表盘</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card-bg: #fff;
+    --border: #e8ecf1;
+    --text: #1a1d23;
+    --text-2: #6b7280;
+    --text-3: #9ca3af;
+    --red: #CD8C7A;
+    --green: #92AE9B;
+    --blue: #7B8D9B;
+    --gold: #f59e0b;
+    --purple: #B4A1B8;
+    --teal: #0ea5e9;
+    --pink: #ec4899;
+    --orange: #f97316;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container { max-width: 1400px; margin:0 auto; padding: 24px 20px; }
+
+  /* Header */
+  .header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; }
+  .header-actions { display: flex; gap: 10px; }
+  .header-actions button {
+    padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border);
+    background: var(--card-bg); cursor: pointer; font-size: 13px; color: var(--text);
+    transition: all .15s;
+  }
+  .header-actions button:hover { background: #f0f1f3; }
+  .header-actions .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .header-actions .btn-primary:hover { background: #667E8F; }
+
+  /* Cards Row */
+  .cards-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+  @media (max-width: 900px) { .cards-row { grid-template-columns: repeat(2, 1fr); } }
+
+  .stat-card {
+    background: var(--card-bg); border-radius: var(--radius); padding: 20px 24px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+  }
+  .stat-card .label { font-size: 13px; color: var(--text-2); margin-bottom: 6px; }
+  .stat-card .value { font-size: 28px; font-weight: 700; }
+  .stat-card .sub { font-size: 12px; color: var(--text-3); margin-top: 4px; }
+  .stat-card .value.up { color: var(--red); }
+  .stat-card .value.down { color: var(--green); }
+
+  /* Charts Row */
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+
+  .chart-card {
+    background: var(--card-bg); border-radius: var(--radius); padding: 20px 24px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
+    position: relative;
+  }
+  .chart-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+  .chart-wrap { position: relative; height: 300px; }
+  .chart-wrap canvas { width: 100% !important; height: 100% !important; }
+
+  /* Tables Section */
+  .section-card {
+    background: var(--card-bg); border-radius: var(--radius); padding: 20px 24px;
+    box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 20px;
+  }
+  .section-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    text-align: left; padding: 10px 12px; background: #f8f9fb;
+    color: var(--text-2); font-weight: 600; border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  /* 统一数值列右对齐，不换行 */
+  td.num, td.pct { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  /* 资产类别汇总：列宽均衡 */
+  #categoryTable th:nth-child(1), #categoryTable td:nth-child(1) { width: 40px; text-align: center; }
+  #categoryTable th:nth-child(2), #categoryTable td:nth-child(2) { min-width: 120px; }
+  #categoryTable th:nth-child(3), #categoryTable td:nth-child(3),
+  #categoryTable th:nth-child(5), #categoryTable td:nth-child(5) { width: 120px; }
+  #categoryTable th:nth-child(4), #categoryTable td:nth-child(4),
+  #categoryTable th:nth-child(6), #categoryTable td:nth-child(6) { width: 80px; }
+  /* 资产明细：列宽均衡 */
+  #assetTable th:nth-child(1), #assetTable td:nth-child(1) { width: 90px; }
+  #assetTable th:nth-child(2), #assetTable td:nth-child(2) { min-width: 100px; }
+  #assetTable th:nth-child(3), #assetTable td:nth-child(3) { width: 70px; }
+  #assetTable th:nth-child(4), #assetTable td:nth-child(4),
+  #assetTable th:nth-child(6), #assetTable td:nth-child(6) { width: 120px; }
+  #assetTable th:nth-child(5), #assetTable td:nth-child(5) { width: 70px; }
+  #assetTable th:nth-child(7), #assetTable td:nth-child(7) { width: 80px; }
+  #assetTable th:nth-child(8), #assetTable td:nth-child(8) { width: 75px; }
+  tbody tr:hover { background: #f8f9fb; }
+  tbody tr.total { font-weight: 700; border-top: 2px solid var(--border); background: #fafbfc; }
+  tbody tr.managed { color: var(--purple); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.pct { text-align: right; }
+  /* 资产明细表列宽 */
+  #assetTable th:nth-child(1), #assetTable td:nth-child(1) { width: 90px; }
+  #assetTable th:nth-child(2), #assetTable td:nth-child(2) { width: auto; }
+  #assetTable th:nth-child(3), #assetTable td:nth-child(3) { width: 70px; }
+  #assetTable th:nth-child(4), #assetTable td:nth-child(4),
+  #assetTable th:nth-child(6), #assetTable td:nth-child(6) { width: 110px; text-align: right; }
+  #assetTable th:nth-child(5), #assetTable td:nth-child(5) { width: 70px; text-align: right; }
+  #assetTable th:nth-child(7), #assetTable td:nth-child(7) { width: 80px; text-align: right; }
+  #assetTable th:nth-child(8), #assetTable td:nth-child(8) { width: 80px; }
+  .tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 11px; font-weight: 600;
+  }
+  .tag-stock { background: #f5ece8; color: #CD8C7A; }
+  .tag-fund { background: #edf3f5; color: #7B9AA8; }
+  .tag-insurance { background: #edf4f0; color: #7A9E8B; }
+  .tag-crypto { background: #f8f4e4; color: #B5A468; }
+  .tag-cash { background: #f0f0ee; color: #8A8782; }
+  .tag-other { background: #f0edf2; color: #8A7F8F; }
+
+  /* IBKR Panel */
+  .ibkr-panel {
+    background: #f2f5f7; border: 1px solid #c8d3db; border-radius: var(--radius);
+    padding: 16px 20px; margin-bottom: 16px;
+  }
+  .ibkr-panel h4 { font-size: 14px; margin-bottom: 8px; color: #5A7688; }
+  .ibkr-panel p { font-size: 12px; color: #6b7280; margin-bottom: 12px; }
+  .ibkr-inputs { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+  .ibkr-inputs label { font-size: 12px; color: var(--text-2); display: flex; flex-direction: column; gap: 4px; }
+  .ibkr-inputs input {
+    padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 13px; width: 200px;
+  }
+  .ibkr-inputs button {
+    padding: 7px 18px; border-radius: 6px; background: var(--blue); color: #fff;
+    border: none; cursor: pointer; font-size: 13px;
+  }
+  .ibkr-inputs button:hover { background: #2563eb; }
+  .ibkr-status { font-size: 12px; margin-top: 8px; }
+  .ibkr-status.success { color: #16a34a; }
+  .ibkr-status.error { color: #dc2626; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,.4); z-index: 1000; align-items: center; justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--card-bg); border-radius: 16px; padding: 28px; max-width: 500px;
+    width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,.15);
+  }
+  .modal h3 { font-size: 18px; margin-bottom: 16px; }
+  .modal .form-group { margin-bottom: 14px; }
+  .modal label { display: block; font-size: 13px; color: var(--text-2); margin-bottom: 4px; }
+  .modal input, .modal select {
+    width: 100%; padding: 8px 12px; border: 1px solid var(--border);
+    border-radius: 6px; font-size: 14px;
+  }
+  .modal .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .modal button {
+    padding: 9px 20px; border-radius: 8px; font-size: 14px; cursor: pointer;
+    border: 1px solid var(--border); background: #fff;
+  }
+  .modal button.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+  /* Exchange Rate Banner */
+  .fx-banner {
+    display: flex; gap: 20px; font-size: 12px; color: var(--text-2);
+    padding: 8px 0; margin-bottom: 16px;
+  }
+  .fx-banner span { font-weight: 600; color: var(--text); }
+
+  .last-update { font-size: 12px; color: var(--text-3); text-align: center; padding: 16px 0; }
+  .col-shares { transition: all .2s; }
+  .col-shares.hidden { display: none; }
+  .stock-group-row:hover { background: #fafbfc; }
+  .stock-group-row td { font-weight: 600; }
+  .stock-sub-row td { border-top: none; }
+</style>
+</head>
+<body>
+
+<!-- 密码锁屏 -->
+<div id="lockScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f6f8;z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;">
+  <div style="text-align:center;">
+    <h2 style="font-size:22px;color:#1a1d23;margin-bottom:8px;">🔒 资产仪表盘</h2>
+    <p style="font-size:13px;color:#9ca3af;margin-bottom:24px;">请输入密码查看</p>
+    <input type="password" id="lockPwd" placeholder="密码" style="width:200px;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;text-align:center;outline:none;" onkeydown="if(event.key==='Enter')unlock()">
+    <button onclick="unlock()" style="margin-top:12px;width:200px;padding:10px;border-radius:8px;background:#7B8D9B;color:#fff;border:none;font-size:14px;cursor:pointer;">解锁</button>
+    <p id="lockError" style="font-size:12px;color:#DC4141;margin-top:10px;display:none;">密码错误</p>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <h1>📊 资产仪表盘</h1>
+  </div>
+
+  <!-- FX Banner -->
+  <div class="fx-banner" id="fxBanner">
+    实时汇率加载中...
+  </div>
+
+  <!-- Stat Cards -->
+  <div class="cards-row">
+    <div class="stat-card">
+      <div class="label">💰 在管总资产</div>
+      <div class="value" id="totalAUM">--</div>
+      <div class="sub" id="totalAUMChange"></div>
+    </div>
+    <div class="stat-card">
+      <div class="label">👤 个人净资产</div>
+      <div class="value" id="personalNAV">--</div>
+      <div class="sub" id="personalNAVChange"></div>
+    </div>
+    <div class="stat-card">
+      <div class="label">👨‍👩‍👦 代管资金</div>
+      <div class="value" style="color: var(--purple)" id="managedFunds">--</div>
+      <div class="sub">爸妈委托管理</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">📈 较上季度变化</div>
+      <div class="value" id="qoqChange">--</div>
+      <div class="sub" id="qoqLabel"></div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3>📈 历史净值走势</h3>
+      <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>🗂 资产配置分布</h3>
+      <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Category Summary Table -->
+  <div class="section-card">
+    <h3>📊 资产类别汇总</h3>
+    <div style="overflow-x: auto;">
+      <table id="categoryTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>资产类别</th>
+            <th class="num">当前价值 (¥万)</th>
+            <th class="pct">占比</th>
+            <th class="num">上季度价值</th>
+            <th class="num">变化</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Asset Table -->
+  <div class="section-card">
+    <h3>📋 资产明细
+      <button id="toggleShares" onclick="toggleSharesCol()" style="font-size:12px; font-weight:400; margin-left:12px; padding:3px 10px; border:1px solid var(--border); border-radius:6px; background:var(--card-bg); cursor:pointer; color:var(--text-2);">≡ 显示持仓</button>
+    </h3>
+    <div style="overflow-x: auto;">
+      <table id="assetTable">
+        <thead>
+          <tr>
+            <th>资产类别</th>
+            <th>账户/平台</th>
+            <th class="col-shares">持仓</th>
+            <th class="num">当前价值 (¥万)</th>
+            <th class="pct">占比</th>
+            <th class="num">上季度价值</th>
+            <th class="num">变化</th>
+            <th>数据来源</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="last-update" id="lastUpdate">数据加载中...</div>
+
+</div>
+
+<!-- Manual Entry Modal -->
+<div class="modal-overlay" id="manualModal">
+  <div class="modal">
+    <h3>✏️ 手动录入资产</h3>
+    <div class="form-group">
+      <label>资产类别</label>
+      <select id="entryCategory">
+        <option>中概股票</option><option>美股基金</option><option>A股基金</option>
+        <option>web3</option><option>外币理财</option><option>RMB理财</option>
+        <option>存款</option><option>债基</option><option>公积金</option>
+        <option>中概基金</option><option>美元保单</option><option>RMB保单</option>
+        <option>代管资金(爸妈)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>账户/平台</label>
+      <input type="text" id="entryPlatform" placeholder="如：长桥、盈透、支付宝...">
+    </div>
+    <div class="form-group">
+      <label>当前价值 (万元 RMB)</label>
+      <input type="number" id="entryValue" step="0.01" placeholder="0.00">
+    </div>
+    <div class="form-group">
+      <label>币种</label>
+      <select id="entryCurrency">
+        <option value="CNY">人民币 ¥</option>
+        <option value="USD">美元 $</option>
+        <option value="HKD">港币 HK$</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button onclick="closeManualEntry()">取消</button>
+      <button class="primary" onclick="saveManualEntry()">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== 汇率数据 ====================
+let fxRates = { USD_CNY: 6.81, HKD_CNY: 0.8693 };
+
+// ==================== 初始化资产数据 ====================
+// 从腾讯文档「资产分布」表迁移的历史数据
+const historicalRecords = [
+  // { date, totalAUM, personalNAV, managedFunds, breakdown by category }
+  { date: '2024-02-19', totalAUM: 99.5, personalNAV: 86.3, managedFunds: 13.2,
+    categories: { '中概股票': 10.0, '美股基金': 0, 'A股基金': 7.8, 'web3': 0, '外币理财': 19.7, 'RMB理财': 30.5, '存款': 0.6, '债基': 1.4, '公积金': 21.1, '中概基金': 1.5, '美元保单': 0, 'RMB保单': 0, '代管资金(爸妈)': 13.2 } },
+  { date: '2024-05-24', totalAUM: 123.0, personalNAV: 97.8, managedFunds: 25.2,
+    categories: { '中概股票': 15.4, '美股基金': 0.4, 'A股基金': 13.2, 'web3': 0, '外币理财': 44.5, 'RMB理财': 4.3, '存款': 0.6, '债基': 4.5, '公积金': 24.3, '中概基金': 3.4, '美元保单': 0, 'RMB保单': 0, '代管资金(爸妈)': 25.2 } },
+  { date: '2024-08-09', totalAUM: 166.5, personalNAV: 105.4, managedFunds: 61.1,
+    categories: { '中概股票': 20.7, '美股基金': 1.3, 'A股基金': 12.7, 'web3': 7.0, '外币理财': 6.5, 'RMB理财': 4.5, '存款': 0.6, '债基': 4.8, '公积金': 26.1, '中概基金': 3.8, '美元保单': 73.9, 'RMB保单': 0, '代管资金(爸妈)': 61.1 } },
+  { date: '2025-01-04', totalAUM: 195.8, personalNAV: 134.7, managedFunds: 61.1,
+    categories: { '中概股票': 22.9, '美股基金': 5.5, 'A股基金': 10.9, 'web3': 10.1, '外币理财': 13.7, 'RMB理财': 13.0, '存款': 0.6, '债基': 6.1, '公积金': 29.8, '中概基金': 2.3, '美元保单': 75.4, 'RMB保单': 0.2, '代管资金(爸妈)': 61.1 } },
+  { date: '2025-04-05', totalAUM: 214.9, personalNAV: 153.8, managedFunds: 61.1,
+    categories: { '中概股票': 30.6, '美股基金': 5.7, 'A股基金': 11.3, 'web3': 24.1, '外币理财': 56.7, 'RMB理财': 2.6, '存款': 0, '债基': 6.8, '公积金': 2.2, '中概基金': 0, '美元保单': 75.4, 'RMB保单': 0.2, '代管资金(爸妈)': 61.1 } },
+  { date: '2025-07-05', totalAUM: 229.8, personalNAV: 162.7, managedFunds: 67.1,
+    categories: { '中概股票': 59.3, '美股基金': 7.2, 'A股基金': 6.1, 'web3': 30.2, '外币理财': 31.5, 'RMB理财': 5.2, '存款': 0, '债基': 8.2, '公积金': 4.6, '中概基金': 0, '美元保单': 80.2, 'RMB保单': 0.2, '代管资金(爸妈)': 67.1 } },
+  { date: '2025-10-15', totalAUM: 254.7, personalNAV: 185.6, managedFunds: 69.1,
+    categories: { '中概股票': 79.9, '美股基金': 8.5, 'A股基金': 5.1, 'web3': 31.4, '外币理财': 53.3, 'RMB理财': 3.8, '存款': 0, '债基': 7.5, '公积金': 7.3, '中概基金': 0, '美元保单': 82.4, 'RMB保单': 0.5, '代管资金(爸妈)': 69.1 } },
+  { date: '2026-01-01', totalAUM: 268.9, personalNAV: 175.8, managedFunds: 93.1,
+    categories: { '中概股票': 97.6, '美股基金': 8.8, 'A股基金': 5.3, 'web3': 24.2, '外币理财': 43.4, 'RMB理财': 4.5, '存款': 0, '债基': 4.7, '公积金': 3.3, '中概基金': 0, '美元保单': 80.9, 'RMB保单': 0.5, '代管资金(爸妈)': 93.1 } },
+  { date: '2026-03-08', totalAUM: 268.6, personalNAV: 175.5, managedFunds: 93.1,
+    categories: { '中概股票': 82.0, '美股基金': 8.5, 'A股基金': 5.4, 'web3': 32.4, '外币理财': 30.1, 'RMB理财': 5.7, '存款': 0, '债基': 4.7, '公积金': 5.1, '中概基金': 0, '美元保单': 80.5, 'RMB保单': 0.5, '代管资金(爸妈)': 93.1 } },
+  { date: '2026-05-07', totalAUM: 277.7, personalNAV: 184.6, managedFunds: 93.1,
+    categories: { '中概股票': 99.6, '美股基金': 9.0, 'A股基金': 6.1, 'web3': 35.4, '外币理财': 24.4, 'RMB理财': 12.1, '存款': 0, '债基': 4.7, '公积金': 6.9, '中概基金': 0, '美元保单': 78.9, 'RMB保单': 0.5, '代管资金(爸妈)': 93.1 } },
+  // 2026-06-23: 支付宝基金按6/23证书拆分，部分A股基金已赎回
+  { date: '2026-06-23', totalAUM: 250.3, personalNAV: 157.2, managedFunds: 93.1,
+    categories: { '中概股票': 95.2, '美股基金': 9.2, 'A股基金': 1.8, 'web3': 31.0, '外币理财': 13.6, 'RMB理财': 8.5, '存款': 0, '债基': 4.7, '公积金': 6.9, '中概基金': 0, '美元保单': 78.9, 'RMB保单': 0.5, '代管资金(爸妈)': 93.1 } },
+];
+
+// 最新数据
+let currentData = { ...historicalRecords[historicalRecords.length - 1] };
+currentData.date = new Date().toISOString().slice(0, 10);
+// 当前作为最新快照的最后更新时间
+let lastSnapshotDate = historicalRecords[historicalRecords.length - 1].date;
+
+// ==================== 详细账户数据（最新快照） ====================
+const accountDetails = [
+  // 长桥 - 股票持仓（2026-06-18 收盘市值）
+  { category: '中概股票', tag: '股票', tagClass: 'tag-stock', platform: '长桥·PDD', shares: '1000股', value: 54.2, source: '实时' },
+  { category: '中概股票', tag: '股票', tagClass: 'tag-stock', platform: '长桥·LKNCY', shares: '200股', value: 4.2, source: '实时' },
+  { category: '中概股票', tag: '股票', tagClass: 'tag-stock', platform: '长桥·0700', shares: '100股', value: 3.8, source: '实时' },
+  { category: '中概股票', tag: '股票', tagClass: 'tag-stock', platform: '长桥·YSG', shares: '500股', value: 1.1, source: '实时' },
+  { category: '中概股票', tag: '股票', tagClass: 'tag-stock', platform: '长桥·MNSO', shares: '200股', value: 0.4, source: '实时' },
+  // 长桥 - 货币基金 + 现金
+  { category: '外币理财', tag: '理财', tagClass: 'tag-other', platform: '长桥·平安货基', shares: '9664份', value: 6.5, source: '实时', sub: '美元' },
+  { category: '外币理财', tag: '理财', tagClass: 'tag-other', platform: '长桥·USD现金', shares: '$942', value: 0.6, source: '实时', sub: '美元' },
+  { category: '外币理财', tag: '理财', tagClass: 'tag-other', platform: '长桥·HKD现金', shares: '$503', value: 0.0, source: '实时', sub: '港币' },
+  // 其他券商
+  { category: '中概股票', tag: '股票', tagClass: 'tag-stock', platform: '盈透·0700', shares: '100股', value: 3.7, source: '实时' },
+  { category: '中概股票', tag: '股票', tagClass: 'tag-stock', platform: '盈透·PDD', shares: '400股', value: 21.7, source: '实时' },
+  { category: '中概股票', tag: '股票', tagClass: 'tag-stock', platform: '中银国际·0700', shares: '157股', value: 6.0, source: '实时' },
+  { category: '中概股票', tag: '股票', tagClass: 'tag-stock', platform: '富途·美团', shares: '15股', value: 0.1, source: '实时' },
+  { category: '美股基金', tag: '基金', tagClass: 'tag-fund', platform: '摩根标普500', shares: '19855份', value: 3.3, source: '实时' },
+  { category: '美股基金', tag: '基金', tagClass: 'tag-fund', platform: '天弘标普500', shares: '13159份', value: 2.9, source: '实时' },
+  { category: '美股基金', tag: '基金', tagClass: 'tag-fund', platform: '华夏标普500', shares: '8342份', value: 1.4, source: '实时' },
+  { category: '美股基金', tag: '基金', tagClass: 'tag-fund', platform: '博时标普500', shares: '2450份', value: 1.3, source: '实时' },
+  { category: '美股基金', tag: '基金', tagClass: 'tag-fund', platform: '景顺纳斯达克', shares: '1035份', value: 0.3, source: '实时' },
+  { category: 'A股基金', tag: '基金', tagClass: 'tag-fund', platform: '大成高鑫股票', shares: '2716份', value: 1.3, source: '实时' },
+  { category: 'A股基金', tag: '基金', tagClass: 'tag-fund', platform: '国金量化多因子', shares: '1036份', value: 0.4, source: '实时' },
+  { category: 'A股基金', tag: '基金', tagClass: 'tag-fund', platform: '中证红利ETF联接', shares: '686份', value: 0.1, source: '实时' },
+  { category: 'web3', tag: '加密货币', tagClass: 'tag-crypto', platform: '币安·BTC', shares: '0.609', value: 26.6, source: '实时' },
+  { category: 'web3', tag: '加密货币', tagClass: 'tag-crypto', platform: '币安·USDT', shares: '6500', value: 4.4, source: '实时' },
+  { category: '外币理财', tag: '理财', tagClass: 'tag-other', platform: '盈透·HKD', shares: '$6.0万', value: 5.2, source: '实时', sub: '港币' },
+  { category: '外币理财', tag: '理财', tagClass: 'tag-other', platform: '盈透·USD', value: 1.3, source: '实时', sub: '美元' },
+  { category: 'RMB理财', tag: '理财', tagClass: 'tag-other', platform: '招商银行', value: 4.8, source: '实时' },
+  { category: 'RMB理财', tag: '理财', tagClass: 'tag-other', platform: '微众银行', value: 2.7, source: '实时' },
+  { category: 'RMB理财', tag: '理财', tagClass: 'tag-other', platform: '招商证券', value: 1.0, source: '实时' },
+  { category: '债基', tag: '基金', tagClass: 'tag-fund', platform: '易方达信用债', shares: '22009份', value: 2.5, source: '实时' },
+  { category: '债基', tag: '基金', tagClass: 'tag-fund', platform: '鹏华丰禄债券', shares: '21163份', value: 2.2, source: '实时' },
+  { category: '公积金', tag: '公积金', tagClass: 'tag-cash', platform: '深圳市', value: 6.9, source: '手动' },
+  { category: '美元保单', tag: '保险', tagClass: 'tag-insurance', platform: 'BLUE', value: 68.0, source: '手动' },
+  { category: '美元保单', tag: '保险', tagClass: 'tag-insurance', platform: '永明', value: 4.1, source: '手动' },
+  { category: '美元保单', tag: '保险', tagClass: 'tag-insurance', platform: 'Chubb', value: 6.8, source: '手动' },
+  { category: 'RMB保单', tag: '保险', tagClass: 'tag-insurance', platform: '中荷', value: 0.5, source: '手动' },
+  { category: '代管资金(爸妈)', tag: '代管', tagClass: 'tag-other', platform: '父母委托', value: 93.1, source: '手动' },
+];
+
+// ==================== 大类汇总定义 ====================
+const categoryGroups = {
+  '中概股票': { label: '中概股票', color: '#CD8C7A', icon: '📈' },
+  '美股基金': { label: '美股基金', color: '#8FAFBC', icon: '🌍' },
+  'A股基金': { label: 'A股基金', color: '#D2A595', icon: '🇨🇳' },
+  'web3': { label: 'Web3/加密货币', color: '#DBC890', icon: '₿' },
+  '外币理财': { label: '外币理财', color: '#8DA2B0', icon: '💵' },
+  'RMB理财': { label: 'RMB理财', color: '#B4A1B8', icon: '💴' },
+  '存款': { label: '银行存款', color: '#B0AEA8', icon: '🏦' },
+  '债基': { label: '债基', color: '#90B1A5', icon: '📋' },
+  '公积金': { label: '公积金', color: '#B8B3AB', icon: '🏠' },
+  '中概基金': { label: '中概基金', color: '#C9B2B4', icon: '🌏' },
+  '美元保单': { label: '美元保单', color: '#92AE9B', icon: '🛡️' },
+  'RMB保单': { label: 'RMB保单', color: '#C5B0B0', icon: '🔰' },
+  '代管资金(爸妈)': { label: '代管资金(爸妈)', color: '#a855f7', icon: '👨‍👩‍👦' },
+};
+
+// ==================== Charts ====================
+let pieChart, lineChart;
+
+function formatCNY(v) { return '¥' + v.toLocaleString('zh-CN', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '万'; }
+function fmtPct(v, total) { if (total === 0) return '0.0%'; return (v / total * 100).toFixed(1) + '%'; }
+
+function renderCharts() {
+  // Chart.js CDN 未加载时跳过图表渲染，数据仍正常显示
+  if (typeof Chart === 'undefined') return;
+
+  const cats = currentData.categories;
+  const totalAUM = currentData.totalAUM;
+
+  // Pie chart - 按占比降序排列，从 1 点钟方向开始
+  const pieData = [];
+  for (const [cat, val] of Object.entries(cats)) {
+    if (val > 0 && cat !== '代管资金(爸妈)') {
+      pieData.push({ label: categoryGroups[cat]?.label || cat, value: val, color: categoryGroups[cat]?.color || '#ccc' });
+    }
+  }
+  pieData.sort((a, b) => b.value - a.value);
+
+  const labels = pieData.map(d => d.label);
+  const values = pieData.map(d => d.value);
+  const colors = pieData.map(d => d.color);
+
+  const pieCtx = document.getElementById('pieChart').getContext('2d');
+  if (pieChart) pieChart.destroy();
+  pieChart = new Chart(pieCtx, {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderColor: '#f5f6f8', borderWidth: 2, hoverBorderWidth: 3 }] },
+    options: {
+      rotation: 30,
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 10, font: { size: 12 } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ${formatCNY(ctx.raw)} (${fmtPct(ctx.raw, totalAUM)})`
+          }
+        }
+      }
+    }
+  });
+
+  // Line chart - historical AUM
+  const lineCtx = document.getElementById('lineChart').getContext('2d');
+  if (lineChart) lineChart.destroy();
+  lineChart = new Chart(lineCtx, {
+    type: 'line',
+    data: {
+      labels: historicalRecords.map(r => r.date.replace('2024', '24').replace('2025', '25').replace('2026', '26')),
+      datasets: [
+        { label: '在管总资产', data: historicalRecords.map(r => r.totalAUM), borderColor: '#CD8C7A', backgroundColor: 'rgba(205,140,122,.06)', fill: true, tension: 0.35, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#CD8C7A' },
+        { label: '个人净资产', data: historicalRecords.map(r => r.personalNAV), borderColor: '#DBC890', backgroundColor: 'transparent', fill: false, tension: 0.35, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: '#DBC890', borderDash: [6, 3] },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 20, font: { size: 12 } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}: ${formatCNY(ctx.raw)}`
+          }
+        }
+      },
+      scales: {
+        y: {
+          ticks: { callback: v => '¥' + v + '万', font: { size: 11 } },
+          grid: { color: '#f0f0f0' }
+        },
+        x: { ticks: { font: { size: 10 } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+// ==================== Render UI ====================
+function renderUI() {
+  const totalAUM = currentData.totalAUM;
+  const personalNAV = currentData.personalNAV;
+  const managedFunds = currentData.managedFunds;
+
+  document.getElementById('totalAUM').textContent = formatCNY(totalAUM);
+  document.getElementById('personalNAV').textContent = formatCNY(personalNAV);
+  document.getElementById('managedFunds').textContent = formatCNY(managedFunds);
+
+  // QoQ change
+  const prevRecord = historicalRecords[historicalRecords.length - 2];
+  const qoq = totalAUM - prevRecord.totalAUM;
+  const qoqPct = prevRecord.totalAUM > 0 ? (qoq / prevRecord.totalAUM * 100) : 0;
+  const qoqEl = document.getElementById('qoqChange');
+  const qoqLabel = document.getElementById('qoqLabel');
+  qoqEl.textContent = (qoq >= 0 ? '+' : '') + formatCNY(qoq);
+  qoqEl.className = 'value ' + (qoq >= 0 ? 'up' : 'down');
+  qoqLabel.textContent = `较上期 (${prevRecord.date})  ${qoqPct >= 0 ? '+' : ''}${qoqPct.toFixed(1)}%`;
+
+  // Total AUM change
+  const aumChange = document.getElementById('totalAUMChange');
+  const firstRecord = historicalRecords[0];
+  const totalGrowth = totalAUM - firstRecord.totalAUM;
+  const totalGrowthPct = firstRecord.totalAUM > 0 ? (totalGrowth / firstRecord.totalAUM * 100) : 0;
+  aumChange.innerHTML = `自 ${firstRecord.date} 累计 <span style="color:${totalGrowth >= 0 ? 'var(--red)' : 'var(--green)'};font-weight:600">${totalGrowth >= 0 ? '+' : ''}${totalGrowthPct.toFixed(1)}%</span>`;
+
+  // Personal NAV change
+  const navChange = document.getElementById('personalNAVChange');
+  const navGrowth = personalNAV - firstRecord.personalNAV;
+  const navGrowthPct = firstRecord.personalNAV > 0 ? (navGrowth / firstRecord.personalNAV * 100) : 0;
+  navChange.innerHTML = `自 ${firstRecord.date} 累计 <span style="color:${navGrowth >= 0 ? 'var(--red)' : 'var(--green)'};font-weight:600">${navGrowth >= 0 ? '+' : ''}${navGrowthPct.toFixed(1)}%</span>`;
+
+  // Render category summary
+  renderCategoryTable();
+  renderTable();
+  renderCharts();
+  document.getElementById('lastUpdate').textContent = `数据快照: ${lastSnapshotDate} | 汇率更新: ${new Date().toLocaleString('zh-CN')}`;
+}
+
+function renderCategoryTable() {
+  const tbody = document.querySelector('#categoryTable tbody');
+  const totalAUM = currentData.totalAUM;
+  const prevRecord = historicalRecords[historicalRecords.length - 2];
+  const prevCats = prevRecord.categories;
+
+  // 只取真实资产类别（排除代管资金），按价值倒序
+  const entries = Object.entries(currentData.categories)
+    .filter(([cat]) => cat !== '代管资金(爸妈)' && cat !== '存款'
+      && cat !== '中概基金' && cat !== '小狮子')
+    .sort((a, b) => b[1] - a[1]);
+
+  let html = '';
+  let rank = 0;
+  for (const [cat, val] of entries) {
+    if (val <= 0) continue;
+    rank++;
+    const prevVal = prevCats[cat] || 0;
+    const change = val - prevVal;
+    html += `<tr>
+      <td>${rank}</td>
+      <td>${categoryGroups[cat]?.icon || ''} ${categoryGroups[cat]?.label || cat}</td>
+      <td class="num">${formatCNY(val)}</td>
+      <td class="pct">${fmtPct(val, totalAUM)}</td>
+      <td class="num">${formatCNY(prevVal)}</td>
+      <td class="num" style="color:${change >= 0 ? 'var(--red)' : 'var(--green)'}">${change >= 0 ? '+' : ''}${change.toFixed(1)}</td>
+    </tr>`;
+  }
+
+  tbody.innerHTML = html;
+}
+
+function renderTable() {
+  const tbody = document.querySelector('#assetTable tbody');
+  const totalAUM = currentData.totalAUM;
+  const managedFunds = currentData.managedFunds;
+  const personalNAV = currentData.personalNAV;
+  const prevRecord = historicalRecords[historicalRecords.length - 2];
+  const prevCats = prevRecord.categories;
+
+  let html = '';
+  // 父母委托资金不是真实资产类别，单独展示（不与其他资产混排）
+  const realAssets = accountDetails.filter(d => d.category !== '代管资金(爸妈)');
+
+  // 按类别总价值倒序分组
+  const catTotals = {};
+  realAssets.forEach(d => { catTotals[d.category] = (catTotals[d.category] || 0) + d.value; });
+  const catOrder = Object.entries(catTotals).sort((a, b) => b[1] - a[1]).map(e => e[0]);
+
+  let stockGroupId = 0;
+  for (const cat of catOrder) {
+    const items = realAssets.filter(d => d.category === cat);
+    // 按股票代码分组，组内按市值降序，组间按组总市值降序
+    const groups = {};
+    items.forEach(d => {
+      const grpKey = d.sub || (d.platform || '').split('·')[1] || d.platform;
+      if (!groups[grpKey]) groups[grpKey] = [];
+      groups[grpKey].push(d);
+    });
+    const sortedGroups = Object.entries(groups)
+      .sort((a, b) => b[1].reduce((s, d) => s + d.value, 0) - a[1].reduce((s, d) => s + d.value, 0));
+
+    const catTotal = catTotals[cat];
+    const prevCatVal = prevCats[cat] || 0;
+    const catChange = catTotal - prevCatVal;
+
+    for (const [grpKey, group] of sortedGroups) {
+      // 组内按价值降序
+      group.sort((a, b) => b.value - a.value);
+      const groupTotal = group.reduce((s, d) => s + d.value, 0);
+      const currentCatTotal = currentData.categories[cat] || 0;
+      const prevAccountVal = currentCatTotal > 0 ? (groupTotal / currentCatTotal * prevCatVal) : 0;
+      const change = groupTotal - prevAccountVal;
+      const isStock = group[0].tag === '股票';
+
+      if (group.length > 1) {
+        // 多账户同组：默认折叠，显示汇总行 + 可展开
+        const gid = 'sg' + (stockGroupId++);
+        const totalShares = isStock ? `${group.reduce((s, d) => {
+          const m = (d.shares || '').match(/(\d+)/); return s + (m ? parseInt(m[1]) : 0);
+        }, 0)}股` : '';
+        html += `<tr class="stock-group-row" onclick="toggleStockGroup('${gid}')" style="cursor:pointer;">
+          <td><span class="tag ${group[0].tagClass}">${cat}</span></td>
+          <td><span id="${gid}_arrow" style="display:inline-block;width:14px;">▸</span> ${grpKey}</td>
+          <td class="col-shares">${totalShares}</td>
+          <td class="num">${formatCNY(groupTotal)}</td>
+          <td class="pct">${fmtPct(groupTotal, totalAUM)}</td>
+          <td class="num">${formatCNY(prevAccountVal)}</td>
+          <td class="num" style="color:${change >= 0 ? 'var(--red)' : 'var(--green)'}">${change >= 0 ? '+' : ''}${change.toFixed(1)}</td>
+          <td style="font-size:11px; color:var(--text-3);">${group.map(d => d.platform.split('·')[0]).join('+')}</td>
+        </tr>`;
+        // 展开的明细行（默认隐藏）
+        for (const item of group) {
+          const subChange = item.value - (currentCatTotal > 0 ? (item.value / currentCatTotal * prevCatVal) : 0);
+          html += `<tr class="stock-sub-row" id="${gid}_sub" style="display:none;">
+            <td></td>
+            <td style="padding-left:32px; font-size:12px; color:var(--text-2);">${item.platform}</td>
+            <td class="col-shares" style="font-size:12px;">${item.shares || ''}</td>
+            <td class="num" style="font-size:12px;">${formatCNY(item.value)}</td>
+            <td class="pct" style="font-size:12px;">${fmtPct(item.value, totalAUM)}</td>
+            <td class="num" style="font-size:12px;">${formatCNY(currentCatTotal > 0 ? (item.value / currentCatTotal * prevCatVal) : 0)}</td>
+            <td class="num" style="font-size:12px; color:${subChange >= 0 ? 'var(--red)' : 'var(--green)'}">${subChange >= 0 ? '+' : ''}${subChange.toFixed(1)}</td>
+            <td style="font-size:11px;">${item.source === 'IBKR' ? '🔗 IBKR' : '✋ ' + item.source}</td>
+          </tr>`;
+        }
+      } else {
+        // 单账户：直接展示
+        const item = group[0];
+        const subChange = item.value - (currentCatTotal > 0 ? (item.value / currentCatTotal * prevCatVal) : 0);
+        html += `<tr>
+          <td><span class="tag ${item.tagClass}">${cat}</span></td>
+          <td>${item.platform}</td>
+          <td class="col-shares">${item.shares || ''}</td>
+          <td class="num">${formatCNY(item.value)}</td>
+          <td class="pct">${fmtPct(item.value, totalAUM)}</td>
+          <td class="num">${formatCNY(currentCatTotal > 0 ? (item.value / currentCatTotal * prevCatVal) : 0)}</td>
+          <td class="num" style="color:${subChange >= 0 ? 'var(--red)' : 'var(--green)'}">${subChange >= 0 ? '+' : ''}${subChange.toFixed(1)}</td>
+          <td>${item.source === 'IBKR' ? '🔗 IBKR' : '✋ ' + item.source}</td>
+        </tr>`;
+      }
+    }
+
+    // 类别小计行（多账户类别时显示）
+    if (items.length > 1) {
+      html += `<tr style="background:#fafbfc; font-weight:600; border-bottom:1px solid var(--border);">
+        <td colspan="3" style="padding-left:24px; font-size:12px; color:var(--text-2);">↳ ${cat} 小计</td>
+        <td class="num" style="font-size:12px;">${formatCNY(catTotal)}</td>
+        <td class="pct" style="font-size:12px;">${fmtPct(catTotal, totalAUM)}</td>
+        <td class="num" style="font-size:12px;">${formatCNY(prevCatVal)}</td>
+        <td class="num" style="font-size:12px; color:${catChange >= 0 ? 'var(--red)' : 'var(--green)'}">${catChange >= 0 ? '+' : ''}${catChange.toFixed(1)}</td>
+        <td></td>
+      </tr>`;
+    }
+  }
+
+  // 在管总资产
+  html += `<tr class="total">
+    <td colspan="3">📌 在管总资产</td>
+    <td class="num">${formatCNY(totalAUM)}</td>
+    <td class="pct">100%</td>
+    <td class="num">${formatCNY(prevRecord.totalAUM)}</td>
+    <td class="num" style="color:${(totalAUM - prevRecord.totalAUM) >= 0 ? 'var(--red)' : 'var(--green)'}">${(totalAUM - prevRecord.totalAUM) >= 0 ? '+' : ''}${(totalAUM - prevRecord.totalAUM).toFixed(1)}</td>
+    <td></td>
+  </tr>`;
+
+  // 父母委托资金（负数对冲项，非真实资产）
+  if (managedFunds > 0) {
+    html += `<tr style="color: var(--purple); border-top: none;">
+      <td colspan="3" style="padding-left: 32px;">↳ 其中：父母委托资金</td>
+      <td class="num" style="color: var(--purple);">-${formatCNY(managedFunds)}</td>
+      <td class="pct" style="color: var(--purple);">-${fmtPct(managedFunds, totalAUM)}</td>
+      <td class="num">${formatCNY(prevRecord.managedFunds)}</td>
+      <td class="num">${managedFunds >= prevRecord.managedFunds ? '+' : ''}${(managedFunds - prevRecord.managedFunds).toFixed(1)}</td>
+      <td style="font-size:11px; color: var(--text-3);">委托管理</td>
+    </tr>`;
+  }
+
+  // 个人净资产
+  html += `<tr class="total" style="background: #f0faf5;">
+    <td colspan="3">👤 个人净资产</td>
+    <td class="num">${formatCNY(personalNAV)}</td>
+    <td class="pct">${fmtPct(personalNAV, totalAUM)}</td>
+    <td class="num">${formatCNY(prevRecord.personalNAV)}</td>
+    <td class="num" style="color:${(personalNAV - prevRecord.personalNAV) >= 0 ? 'var(--red)' : 'var(--green)'}">${(personalNAV - prevRecord.personalNAV) >= 0 ? '+' : ''}${(personalNAV - prevRecord.personalNAV).toFixed(1)}</td>
+    <td></td>
+  </tr>`;
+
+  tbody.innerHTML = html;
+}
+
+// ==================== IBKR Sync ====================
+function saveIBKRConfig() {
+  const token = document.getElementById('ibkrToken').value.trim();
+  const queryId = document.getElementById('ibkrQueryId').value.trim();
+  if (!token || !queryId) {
+    document.getElementById('ibkrStatus').innerHTML = '<span class="ibkr-status error">❌ 请填写 Token 和 Query ID</span>';
+    return;
+  }
+  localStorage.setItem('ibkr_token', token);
+  localStorage.setItem('ibkr_query_id', queryId);
+  document.getElementById('ibkrStatus').innerHTML = '<span class="ibkr-status success">✅ IBKR 配置已保存。点击「同步 IBKR」按钮拉取最新数据。</span>';
+}
+
+function syncIBKR() {
+  const statusEl = document.getElementById('ibkrStatus');
+  statusEl.innerHTML = '⏳ 正在从 IBKR 拉取数据...';
+
+  fetch('http://localhost:8765/ibkr')
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        statusEl.innerHTML = `<span class="ibkr-status error">❌ ${data.error}</span>`;
+        return;
+      }
+      if (data.positions && data.positions.length > 0) {
+        // 移除旧的 IBKR 条目
+        const ibkrIndices = [];
+        accountDetails.forEach((d, i) => {
+          if (d.platform.startsWith('盈透')) ibkrIndices.push(i);
+        });
+        ibkrIndices.sort((a, b) => b - a).forEach(i => accountDetails.splice(i, 1));
+
+        // 添加新持仓
+        data.positions.forEach(p => {
+          if (p.positionValue > 0) {
+            const cnyWan = p.cny_wan || 0;
+            if (cnyWan > 0) {
+              accountDetails.push({
+                category: '中概股票', tag: '股票', tagClass: 'tag-stock',
+                platform: `盈透·${p.symbol}`, shares: `${p.quantity}股`,
+                value: cnyWan, source: 'IBKR'
+              });
+            }
+          }
+        });
+        // 添加现金
+        if (data.cash) {
+          data.cash.forEach(c => {
+            const cnyWan = c.cny_wan || 0;
+            if (cnyWan > 0) {
+              accountDetails.push({
+                category: '外币理财', tag: '理财', tagClass: 'tag-other',
+                platform: `盈透·${c.currency}`,
+                value: cnyWan, source: 'IBKR',
+                sub: (c.currency === 'HKD' || c.currency === 'CNH') ? c.currency : '美元'
+              });
+            }
+          });
+        }
+        updateCurrentData();
+        renderUI();
+        saveToLocalStorage();
+        statusEl.innerHTML = `<span class="ibkr-status success">✅ IBKR 同步成功！总估值 ${formatCNY(data.totalCNY_Wan)}</span>`;
+      } else {
+        statusEl.innerHTML = '<span class="ibkr-status error">⚠️ IBKR 报表中无持仓数据</span>';
+      }
+    })
+    .catch(err => {
+      statusEl.innerHTML = `<span class="ibkr-status error">❌ 连接失败: ${err.message}<br>请确认终端已运行：<code>IBKR_TOKEN=你的token python3 ibkr_proxy.py</code></span>`;
+    });
+}
+
+function updateCurrentData() {
+  // Recalculate category totals from account details
+  const catTotals = {};
+  accountDetails.forEach(d => {
+    catTotals[d.category] = (catTotals[d.category] || 0) + d.value;
+  });
+
+  currentData.categories = catTotals;
+  // 代管资金(爸妈) 已嵌入其他资产类别，不计入总资产（避免重复计算）
+  currentData.totalAUM = Object.entries(catTotals)
+    .filter(([cat]) => cat !== '代管资金(爸妈)')
+    .reduce((sum, [, v]) => sum + v, 0);
+  currentData.managedFunds = catTotals['代管资金(爸妈)'] || 0;
+  currentData.personalNAV = currentData.totalAUM - currentData.managedFunds;
+
+  // Update the last record in history
+  const lastRec = historicalRecords[historicalRecords.length - 1];
+  lastRec.categories = { ...catTotals };
+  lastRec.totalAUM = currentData.totalAUM;
+  lastRec.personalNAV = currentData.personalNAV;
+  lastRec.managedFunds = currentData.managedFunds;
+  lastSnapshotDate = new Date().toISOString().slice(0, 10);
+  lastRec.date = lastSnapshotDate;
+}
+
+// ==================== Manual Entry ====================
+function openManualEntry() {
+  document.getElementById('manualModal').classList.add('active');
+}
+
+function closeManualEntry() {
+  document.getElementById('manualModal').classList.remove('active');
+}
+
+function saveManualEntry() {
+  const category = document.getElementById('entryCategory').value;
+  const platform = document.getElementById('entryPlatform').value.trim();
+  const rawValue = parseFloat(document.getElementById('entryValue').value);
+  const currency = document.getElementById('entryCurrency').value;
+
+  if (!platform || isNaN(rawValue) || rawValue < 0) {
+    alert('请填写完整的平台和金额信息');
+    return;
+  }
+
+  // Convert to CNY
+  let cnyValue = rawValue;
+  if (currency === 'USD') cnyValue = rawValue * fxRates.USD_CNY;
+  else if (currency === 'HKD') cnyValue = rawValue * fxRates.HKD_CNY;
+
+  // Round to 1 decimal
+  cnyValue = Math.round(cnyValue * 10) / 10;
+
+  // Update or add entry
+  const existing = accountDetails.find(d => d.category === category && d.platform === platform);
+  if (existing) {
+    existing.value = cnyValue;
+    existing.source = '手动';
+  } else {
+    const tagMap = { '中概股票': ['股票','tag-stock'], '美股基金': ['基金','tag-fund'], 'A股基金': ['基金','tag-fund'],
+      'web3': ['加密货币','tag-crypto'], '外币理财': ['理财','tag-other'], 'RMB理财': ['理财','tag-other'],
+      '存款': ['存款','tag-cash'], '债基': ['基金','tag-fund'], '公积金': ['公积金','tag-cash'],
+      '中概基金': ['基金','tag-fund'], '美元保单': ['保险','tag-insurance'], 'RMB保单': ['保险','tag-insurance'],
+      '代管资金(爸妈)': ['代管','tag-other'] };
+    const [tag, tagClass] = tagMap[category] || ['其他','tag-other'];
+    accountDetails.push({ category, tag, tagClass, platform, value: cnyValue, source: '手动' });
+  }
+
+  updateCurrentData();
+  renderUI();
+  closeManualEntry();
+
+  // Save to localStorage
+  saveToLocalStorage();
+}
+
+// ==================== Persistence ====================
+function saveToLocalStorage() {
+  localStorage.setItem('asset_account_details', JSON.stringify(accountDetails));
+  localStorage.setItem('asset_historical', JSON.stringify(historicalRecords));
+}
+
+function loadFromLocalStorage() {
+  const saved = localStorage.getItem('asset_account_details');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    accountDetails.length = 0;
+    accountDetails.push(...parsed);
+  }
+
+  const savedHistory = localStorage.getItem('asset_historical');
+  if (savedHistory) {
+    const parsed = JSON.parse(savedHistory);
+    historicalRecords.length = 0;
+    historicalRecords.push(...parsed);
+    currentData = { ...historicalRecords[historicalRecords.length - 1] };
+  }
+
+  // Load IBKR config
+  const token = localStorage.getItem('ibkr_token');
+  const queryId = localStorage.getItem('ibkr_query_id');
+  if (token) document.getElementById('ibkrToken').value = token;
+  if (queryId) document.getElementById('ibkrQueryId').value = queryId;
+}
+
+// ==================== FX Rates ====================
+async function fetchFXRates() {
+  try {
+    // Try to get real rates from a free API
+    const resp = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    const data = await resp.json();
+    if (data.rates) {
+      fxRates.USD_CNY = data.rates.CNY;
+      // HKD via USD
+      const hkdResp = await fetch('https://api.exchangerate-api.com/v4/latest/HKD');
+      const hkdData = await hkdResp.json();
+      if (hkdData.rates) {
+        fxRates.HKD_CNY = hkdData.rates.CNY;
+      }
+    }
+  } catch (e) {
+    // Fallback to default rates
+    console.log('FX API unavailable, using default rates');
+  }
+
+  document.getElementById('fxBanner').innerHTML = `
+    <span>💱 USD/CNY ${fxRates.USD_CNY.toFixed(4)}</span>
+    <span>💱 HKD/CNY ${fxRates.HKD_CNY.toFixed(4)}</span>
+    <span style="color:var(--text-3)">(数据仅供参考，每5分钟自动刷新)</span>
+  `;
+}
+
+// ==================== 持仓列折叠 ====================
+function toggleSharesCol() {
+  const cols = document.querySelectorAll('#assetTable .col-shares');
+  const btn = document.getElementById('toggleShares');
+  const hidden = cols.length > 0 && cols[0].classList.contains('hidden');
+  if (hidden) {
+    cols.forEach(c => c.classList.remove('hidden'));
+    btn.textContent = '≡ 隐藏持仓';
+  } else {
+    cols.forEach(c => c.classList.add('hidden'));
+    btn.textContent = '≡ 显示持仓';
+  }
+}
+
+// ==================== 股票分组展开折叠 ====================
+function toggleStockGroup(gid) {
+  const subs = document.querySelectorAll(`#${gid}_sub`);
+  const arrow = document.getElementById(`${gid}_arrow`);
+  const expanded = subs.length > 0 && subs[0].style.display !== 'none';
+  if (expanded) {
+    subs.forEach(s => s.style.display = 'none');
+    if (arrow) arrow.textContent = '▸';
+  } else {
+    subs.forEach(s => s.style.display = '');
+    if (arrow) arrow.textContent = '▾';
+  }
+}
+
+// ==================== 密码锁 ====================
+const UNLOCK_PWD = 'ankhli2025';
+
+function unlock() {
+  const input = document.getElementById('lockPwd').value;
+  if (input === UNLOCK_PWD) {
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('lockError').style.display = 'none';
+    sessionStorage.setItem('unlocked', '1');
+  } else {
+    document.getElementById('lockError').style.display = 'block';
+    document.getElementById('lockPwd').value = '';
+  }
+}
+
+// ==================== Init ====================
+function init() {
+  // 已解锁则自动跳过锁屏
+  if (sessionStorage.getItem('unlocked') === '1') {
+    document.getElementById('lockScreen').style.display = 'none';
+  }
+  loadFromLocalStorage();
+  updateCurrentData();
+  fetchFXRates();
+  renderUI();
+
+  setInterval(fetchFXRates, 300000);
+
+  document.getElementById('manualModal').addEventListener('click', function(e) {
+    if (e.target === this) closeManualEntry();
+  });
+}
+
+// 页面底部直接执行，不等待 Chart.js CDN（慢网络下也能正常显示数据）
+init();
+</script>
+
+<!-- Chart.js 放在最后，确保数据先渲染，图表后加载 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>renderCharts();</script>
+</body>
+</html>
